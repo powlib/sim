@@ -110,6 +110,13 @@ class FlipflopDriver(WrRdDriver):
     _default_values   = {'d':0,'vld':0}
 
     @property
+    def INIT(self):
+        '''
+        Gets the initial value.
+        '''
+        return int(self.entity.INIT.value)
+    
+    @property
     def W(self):
         '''
         Gets the specified width.

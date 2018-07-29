@@ -225,7 +225,7 @@ class CntrDriver(WrRdDriver):
     cocotb driver for powlib_cntr.
     '''
     
-    _wrsignals        = ['adv','clr']
+    _wrsignals        = ['adv','clr','dx']
     _rdsignals        = ['cntr']
     _optional_signals = ['ld','nval']
     _default_values   = {'adv':0,'clr':0,'ld':0,'nval':0}    
@@ -251,17 +251,27 @@ class CntrDriver(WrRdDriver):
         '''
         return int(self.entity.INIT.value) 
 
+    @property
+    def EDX(self):
+        '''
+        Gets the enable dynamic increment / decrement flag.
+        '''
+        return int(self.entity.EDX.value)
+
+
     @coroutine
-    def write(self, adv=0, clr=0, ld=0, nval=0, sync=True):
+    def write(self, adv=0, dx=0, clr=0, ld=0, nval=0, sync=True):
         '''
         Writes new data to the counter and then waits 
         untils the data is registered.
         adv  = 1 continues counter. 0 pauses counter.
+        dx   = Dynamic increment / decrement. Only used when this mode is enabled.
         clr  = 1 clears counter indefinitely. 0 allows the counter to perform other operations.
         ld   = 1 loads nval into the counter. 0 allows the counter to perform other operations.
         sync = True enables the clock cycle. False disables it.
         '''
         
+        self.wrbus.dx.value   = dx
         self.wrbus.adv.value  = adv
         self.wrbus.clr.value  = clr
         self.wrbus.ld.value   = ld

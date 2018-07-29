@@ -18,15 +18,18 @@ def _in_reset(bus_monitor, active=1):
 class FlipflopMonitor(BusMonitor):
     '''
     A simple monitor for powlib_flipflop. 
+
+    THIS IS NEEDS TO BE UPDATED SUCH THAT IT INHERITS FROM WrRdDriverMonitor.
     '''
 
     _signals = ['q']
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, waitstartcycles=0, *args, **kwargs):
         '''
         Constructor is overloaded only to ensure the correct
         parameters are used such that the Bus is configured properly.
         '''
+        self.__waitstartcycles = waitstartcycles
         BusMonitor.__init__(self, name="", bus_separator="", *args, **kwargs)
 
     def clear(self):
@@ -37,16 +40,23 @@ class FlipflopMonitor(BusMonitor):
         self._recvQ.clear()
 
     @coroutine
-    def cycle(self):
+    def cycle(self, amount=1):
         '''
-        Waits a cycle.
+        Waits a single clock cycle, by default.
+        Specifying the amount causes a wait for
+        multiple cycles.
         '''
 
-        yield ReadOnly()             # Switches to simulator until all deltas have completed.
-        yield RisingEdge(self.clock) # Switches to simulator until the rising edge of the clock.
+        for _ in range(amount):
+            yield ReadOnly()
+            yield RisingEdge(self.clock) 
 
     @coroutine
     def _monitor_recv(self):
+
+        # Wait the specified number of wait cycles on start.
+        if self.__waitstartcycles!=0: 
+            yield self.cycle(self.__waitstartcycles) 
 
         # Wait until the reset is in a valid state before continuing to
         # the main loop.
@@ -69,12 +79,16 @@ class WrRdDriverMonitor(BusMonitor):
     
     _signals = []
      
-    def __init__(self, wrrddriver, *args, **kwargs):
+    def __init__(self, wrrddriver, waitstartcycles=0, *args, **kwargs):
         '''
         Takes a WrRdDriver as an inputer so that its read
-        method can be utilized.
+        method can be utilized. 
+
+        waitstartcycles can be used to have the monitor wait the specified
+        amount of the clock cycles before it starts blocking on reset.
         '''
-        self.__driver = wrrddriver
+        self.__driver          = wrrddriver
+        self.__waitstartcycles = waitstartcycles
         BusMonitor.__init__(self, entity=wrrddriver.entity, 
                                   clock=wrrddriver.clock,
                                   name="", 
@@ -139,6 +153,10 @@ class WrRdDriverMonitor(BusMonitor):
         '''
         This method is forked as a running coroutine.
         '''
+
+        # Wait the specified number of wait cycles on start.
+        if self.__waitstartcycles!=0: 
+            yield self.cycle(self.__waitstartcycles) 
 
         # Wait until the reset is in a valid state before continuing to
         # the main loop.

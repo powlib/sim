@@ -106,12 +106,12 @@ class TestEnvironment(object):
         Starts the testbench environment by starting the clocks and resetting all
         the resets.
         '''
-
+        
         # Start indefinitely each clock.
         for clock, period, phase in self.__clks:
             self.log.info("Starting clock <{}> with period <{}> and phase <{}>...".format(clock._name, period, phase))
             fork(start_clock(clock, period, phase))
-
+            
         # Reset the test environment. 
         rst_frks = []
         for reset, active_mode, associated_clock, wait_cycles, wait_time in self.__rsts:

@@ -50,7 +50,6 @@ class InPort(Port):
         Port.__init__(self, block)
         self.__data = deque()
 
-
     def write(self, data):
         '''
         Writes data into the inport and 

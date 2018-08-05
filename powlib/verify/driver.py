@@ -40,7 +40,23 @@ class Driver(Block):
         Writes data into the driver's queue.
         '''
         self.__queue.append(data)        
-        self.__event.set()
+        self._event.set()
+
+    def behavior(self):
+        '''
+        Implements the behavior of the block.
+        '''
+        if self.inport.ready():
+            data = self.inport.read()
+            self.write(data)           
+
+    @property
+    def _event(self):
+        '''
+        Return the event object used to synchronize the _drive coroutine
+        with the parent coroutine for new data.
+        '''
+        return self.__event        
 
     def _ready(self):
         '''
@@ -55,15 +71,13 @@ class Driver(Block):
         try: return self.__queue.popLeft()  
         except IndexError: return None          
 
-    def behavior(self):
+    @coroutine
+    def _drive(self):
         '''
-        Implements the behavior of the block.
+        This coroutine should be implemented such that it writes out
+        data to the specified interface and 
         '''
-        if self.inport.ready():
-            data = self.inport.read()
-            self.write(data)   
-
-    def                
+        raise NotImplemented("The drive coroutine should be implemented.")               
         
 
 

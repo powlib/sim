@@ -2,31 +2,45 @@ from cocotb              import fork
 from cocotb.decorators   import coroutine
 from cocotb.triggers     import Event
 from powlib              import Interface, Transaction
-from powlib.verify.block import Block, InPort
+from powlib.verify.block import Block, InPort, OutPort
 from collections         import deque
 
-class Driver(Block):
+class Component(Block):
+    '''
+    A component is a block that represents the connection
+    between simulation and hardware.
+    '''
+
+    def __init__(self, interface):
+
+        if not isinstance(interface, Interface):
+            raise TypeError("interface should be an Interface.")
+        self.__interface = interface
+
+    @property
+    def _interface(self):
+        '''
+        Safely return the reference to the interface
+        associated with this driver.
+        '''
+        return self.__interface        
+
+class Driver(Component):
+    '''
+    Block intended for driving transactions onto
+    an interface.
+    '''
 
     def __init__(self, interface):
         '''
         Constructs the driver with a given
         interface.
         '''
-
-        if not isinstance(interface, Interface):
-            raise TypeError("interface should be an Interface.")
-        self.__interface = interface
+        Component.__init__(self, interface)        
         self.__inport    = InPort(block=self)
         self.__queue     = deque()
         self.__event     = Event()
-
-    @property
-    def interface(self):
-        '''
-        Safely return the reference to the interface
-        associated with this driver.
-        '''
-        return self.__interface
+        fork(self._drive())
 
     @property
     def inport(self):
@@ -48,7 +62,7 @@ class Driver(Block):
         '''
         if self.inport.ready():
             data = self.inport.read()
-            self.write(data)           
+            self.write(data)      
 
     @property
     def _event(self):
@@ -75,10 +89,36 @@ class Driver(Block):
     def _drive(self):
         '''
         This coroutine should be implemented such that it writes out
-        data to the specified interface and 
+        data to the specified interface with the data acquired from the
+        driver's queue. The _ready and _read methods should be used for 
+        acquiring the data, the _event property should be used for 
+        synchronization, the _interface property should be used for
+        acquiring the handles.
         '''
         raise NotImplemented("The drive coroutine should be implemented.")               
         
+class Monitor(Component):
+    '''
+    '''
+
+    def __init__(self, interface):
+        '''
+        '''
+        Component.__init__(self, interface)        
+        self.__outport    = OutPort(block=self)
+        fork(self._monitor())   
+
+    @property
+    def outport(self):
+        '''
+        Safely return the outport associated with the monitor.
+        '''
+        return self.__outport
+
+    @coroutine
+    def _monitor(self):
+        raise NotImplemented("The monitor coroutine should be implemented.")        
+
 
 
 

@@ -2,7 +2,7 @@
 from abc         import ABCMeta, abstractmethod
 from collections import deque
 
-class Block(metaclass=ABCMeta):
+class Block(object,metaclass=ABCMeta):
     '''
     The basic build "block". The intention is to provide
     system with which simulations can be functionally divided
@@ -19,11 +19,16 @@ class Block(metaclass=ABCMeta):
         pass
 
 class Port(object):
+    '''
+    Represents the connections between blocks.
+    '''
 
     def __init__(self, block):
         '''
         Associates the port with a single block.
         '''
+        if not instance(block, Block):
+            raise TypeError("block should be an instance of Block.")
         self.__block = block
     
     @property
@@ -34,6 +39,9 @@ class Port(object):
         return self.__block
 
 class InPort(Port):
+    '''
+    Represents an input to a block.
+    '''
 
     def __init__(self, block):
         '''
@@ -68,9 +76,13 @@ class InPort(Port):
         except IndexError: return None
 
 class OutPort(Port):
+    '''
+    Represents a output port from a block.
+    '''
 
     def __init__(self, block):
         '''
+        Constructor.
         '''
         Port.__init__(self, block)
         self.__inports = []
@@ -80,7 +92,8 @@ class OutPort(Port):
         Connects the specified inport to the
         output.
         '''
-
+        if not isinstance(inport, InPort):
+            raise TypeError("inport should be an instance of InpPort.")
         self.__inports.append(inport)
 
     def disconnect(self, inport):

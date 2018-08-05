@@ -1,4 +1,5 @@
 
+
 class Namespace(object):
     '''
     Used to quickly create a Namespace.
@@ -33,7 +34,13 @@ class Namespace(object):
         '''
         Determines whether or not this namespace is equal to the specified namespace.
         '''
-        return self.issubsetof(namespace) and namespace.issubsetof(self)
+        return self.issubsetof(namespace) and (self.size()==namespace.size())
+
+    def size(self):
+        '''
+        Returns the number of members in the namespace.
+        '''        
+        return len(vars(self))
 
     def __eq__(self, namespace):
         '''

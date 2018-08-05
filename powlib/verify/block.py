@@ -10,7 +10,7 @@ class Block(object,metaclass=ABCMeta):
     '''
 
     @abstractmethod
-    def behavior(self):
+    def _behavior(self):
         '''
         The behavior of a block is used to 
         implement the operations a block must execute
@@ -57,7 +57,7 @@ class InPort(Port):
         with the inport.
         '''
         self.__data.append(data)
-        self.block.behavior()
+        self.block._behavior()
     
     def ready(self):
         '''

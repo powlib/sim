@@ -12,7 +12,10 @@ class Component(Block):
     '''
 
     def __init__(self, interface):
-
+        '''
+        Constructor that associates the interface
+        with the component.
+        '''
         if not isinstance(interface, Interface):
             raise TypeError("interface should be an Interface.")
         self.__interface = interface
@@ -56,7 +59,7 @@ class Driver(Component):
         self.__queue.append(data)        
         self._event.set()
 
-    def behavior(self):
+    def _behavior(self):
         '''
         Implements the behavior of the block.
         '''
@@ -99,10 +102,14 @@ class Driver(Component):
         
 class Monitor(Component):
     '''
+    The monitor is a component intended to sample transactions
+    from the specified interface, and output them.
     '''
 
     def __init__(self, interface):
         '''
+        Constructor that associates the interface
+        with the component.
         '''
         Component.__init__(self, interface)        
         self.__outport    = OutPort(block=self)
@@ -115,8 +122,19 @@ class Monitor(Component):
         '''
         return self.__outport
 
+    def _behavior(self):
+        '''
+        Must be implemented since a Monitor is still a block.
+        '''
+        pass        
+
     @coroutine
     def _monitor(self):
+        '''
+        This coroutine should be implemented such that it looks for 
+        valid transactions on the specified interface, and then outputs
+        them with the outport.
+        '''
         raise NotImplemented("The monitor coroutine should be implemented.")        
 
 

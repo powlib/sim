@@ -56,6 +56,9 @@ class ClockDriver(Driver):
             fork(start_clock(clock=handle, period=period, phase=phase))
 
 class ResetDriver(Driver):
+    '''
+
+    '''
 
     def __init__(self, interface, active_mode_trans=None, associated_clock_trans=None, \
                                   wait_cycles_trans=None, wait_time_trans=None, name=""):
@@ -100,8 +103,10 @@ class ResetDriver(Driver):
             add_param(param_trans=self.__associated_clock_trans, param_dict=params, param_name="associated_clock", reset_name=name)
             add_param(param_trans=self.__wait_cycles_trans,      param_dict=params, param_name="wait_cycles",      reset_name=name)
             add_param(param_trans=self.__wait_time_trans,        param_dict=params, param_name="wait_time",        reset_name=name)
+            self.__log.info("Initiating reset {}...".format(name))
             cos.append(start_reset(**params))
 
         # Wait until all start reset coroutines finish their operation.
         for co in cos: yield co.join()
         self.__event.set()            
+        self.__log.info("Resets have been de-asserted...")        

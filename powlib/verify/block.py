@@ -32,7 +32,7 @@ class Port(object):
         self.__block = block
     
     @property
-    def block(self):
+    def _block(self):
         '''
         Safely returns the reference to the associated block.
         '''
@@ -57,7 +57,7 @@ class InPort(Port):
         with the inport.
         '''
         self.__data.append(data)
-        self.block._behavior()
+        self._block._behavior()
     
     def ready(self):
         '''

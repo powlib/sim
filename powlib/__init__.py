@@ -66,9 +66,16 @@ class Interface(Namespace):
         This constructor is needed to ensure the interface
         is created with only cocotb handles.
         '''
-        Namespace.__init__(self, **kwargs)
+        
+        # Check and make sure all the members are cocotb handles.
         if not all (isinstance(handle, SimHandleBase) for name, handle in kwargs.items()):
             raise TypeError("An interface should contain only cocotb handles, i.e. SimHandleBase.")
+
+        # Check and make sure all the control signals are defined.            
+        if not all(name in self._cntrl for name, handle in kwargs.items()):
+            raise TypeError("The interface should include all the controls: {}".format(self._cntrl))
+
+        Namespace.__init__(self, **kwargs)
 
     def transaction(self, **data):
         '''

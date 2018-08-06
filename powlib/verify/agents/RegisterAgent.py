@@ -9,7 +9,7 @@ class RegisterInterface(Interface):
     of only two control signals, the clock
     and reset.
     '''
-    _cntrl.extend(['clk','rst'])
+    _cntrl = ['clk','rst']
 
 class RegisterDriver(Driver):
     '''

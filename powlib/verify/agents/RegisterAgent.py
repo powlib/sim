@@ -70,23 +70,12 @@ class RegisterDriver(Driver):
         '''
         
         yield self._write_default()
-
         yield self._wait_reset()
-
-        while True:
-
+        while True:           
+            while (self._ready()):
+                yield self._synchronize()
+                self._interface.write(self._read())
             yield self._event.wait()
             self._event.clear()          
 
-            yield self._synchronize()
-            
-            self._interface.write(self._read())
-
-            while(self._ready()):
-
-                yield self._synchronize()
-                
-                self._interface.write(self._read())
-
-                
                 

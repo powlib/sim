@@ -2,7 +2,7 @@
 from cocotb                  import fork
 from cocotb.decorators       import coroutine
 from cocotb.log              import SimLog
-from cocotb.triggers         import Event
+from cocotb.triggers         import Event, NullTrigger
 
 from powlib.utils            import start_clock, start_reset
 from powlib.verify.component import Driver
@@ -22,7 +22,7 @@ class ClockDriver(Driver):
         name            = String identifier needed for logging.                       
         '''
         self.__param_namespace = param_namespace
-        self.__log             = SimLog("cocotb.clocks.{}".format(name))
+        self.__log             = SimLog("cocotb.clks.{}".format(name))
         Driver.__init__(self, interface)        
 
     @property
@@ -50,9 +50,11 @@ class ClockDriver(Driver):
             phase      = getattr(params, "phase", None)
             param_dict = {}
             if period is not None: param_dict["period"] = period
-            if period is not None: param_dict["phase"]  = phase
+            if phase  is not None: param_dict["phase"]  = phase
             self.__log.info("Starting clock {} with period {} and phase {}...".format(name, period, phase))
             fork(start_clock(clock=handle, **param_dict))
+
+        yield NullTrigger()
 
 class ResetDriver(Driver):
     '''
@@ -70,7 +72,7 @@ class ResetDriver(Driver):
         '''
         self.__param_namespace        = param_namespace
         self.__event                  = Event()
-        self.__log                    = Simlog("cocotb.resets.{}".format(name))
+        self.__log                    = SimLog("cocotb.rsts.{}".format(name))
         Driver.__init__(self, interface)
 
     @coroutine
@@ -105,8 +107,9 @@ class ResetDriver(Driver):
             add_param(params=params, param_name="associated_clock", param_dict=param_dict)
             add_param(params=params, param_name="wait_cycles",      param_dict=param_dict)
             add_param(params=params, param_name="wait_time",        param_dict=param_dict)
-            self.__log.info("Initiating reset {}...".format(name))
-            cos.append(start_reset(**params))
+            self.__log.info("Initiating reset {}...".format(name))            
+            self.__log.info("DEBUG: {}".format(param_dict))
+            cos.append(fork(start_reset(reset=handle, **param_dict)))
 
         # Wait until all start reset coroutines finish their operation.
         for co in cos: yield co.join()

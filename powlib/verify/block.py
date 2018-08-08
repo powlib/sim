@@ -27,7 +27,7 @@ class Port(object):
         '''
         Associates the port with a single block.
         '''
-        if not instance(block, Block):
+        if not isinstance(block, Block):
             raise TypeError("block should be an instance of Block.")
         self.__block = block
     
@@ -71,7 +71,7 @@ class InPort(Port):
         Returns data written to the inport. If no data exists, None is
         returned.
         '''  
-        try: return self.__data.popLeft()  
+        try: return self.__data.popleft()  
         except IndexError: return None
 
 class OutPort(Port):

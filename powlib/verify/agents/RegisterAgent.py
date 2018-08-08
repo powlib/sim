@@ -1,7 +1,9 @@
+from cocotb.log              import SimLog
+from cocotb.decorators       import coroutine
 from cocotb.triggers         import ReadOnly, RisingEdge, Edge, NullTrigger
 
 from powlib.verify.component import Driver, Monitor, Component
-from powlib                  import Interface
+from powlib                  import Interface, Transaction
 
 class RegisterInterface(Interface):
     '''
@@ -69,13 +71,16 @@ class RegisterDriver(Driver):
         '''
 
         # Generate a transaction with all the data signals. Set the
-        # default values.
-        trans = self._interface.transaction(**vars(self.__default_trans))
+        # default values.      
+        default_dict = {}
+        if self.__default_trans is not None:  
+            default_dict = vars(self.__default_trans)        
+        trans = self._interface.transaction(**default_dict)
 
         # If there are any data signals not assigned, assume their default
         # value should be zerp.
         for name, value in vars(trans).items():
-            if value is None: trans[name] = 0
+            if value is None: setattr(trans, name, 0) 
 
         # Write the transaction to the interface.
         self._interface.write(trans)

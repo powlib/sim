@@ -71,8 +71,8 @@ class Interface(Namespace):
         if not all (isinstance(handle, SimHandleBase) for name, handle in kwargs.items()):
             raise TypeError("An interface should contain only cocotb handles, i.e. SimHandleBase.")
 
-        # Check and make sure all the control signals are defined.            
-        if not all(name in self._cntrl for name, handle in kwargs.items()):
+        # Check and make sure all the control signals are defined.                    
+        if not set(self._cntrl).issubset(set(kwargs.keys())):
             raise TypeError("The interface should include all the controls: {}".format(self._cntrl))
 
         Namespace.__init__(self, **kwargs)
@@ -84,7 +84,7 @@ class Interface(Namespace):
         '''
         trans = {}
         for name, handle in vars(self).items():
-            if name is not self._cntrl:
+            if name not in self._cntrl:
                 trans[name] = getattr(data, name, None)
         return Transaction(**trans)                
 
@@ -94,7 +94,7 @@ class Interface(Namespace):
         The specified data should be a transaction.
         '''        
         for name, handle in vars(self).items():
-            if name is not self._cntrl:
+            if name not in self._cntrl:
                 value = getattr(trans, name, None)
                 if value is not None:
                     handle.value = value
@@ -106,6 +106,6 @@ class Interface(Namespace):
         '''  
         trans = {}
         for name, handle in vars(self).items():
-            if name is not self._cntrl:
+            if name not in self._cntrl:
                 trans[name] = handle.value
         return Transaction(**trans)

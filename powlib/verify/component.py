@@ -85,7 +85,7 @@ class Driver(Component):
         '''
         Reads data from the driver's queue.
         '''      
-        try: return self.__queue.popLeft()  
+        try: return self.__queue.popleft()  
         except IndexError: return None          
 
     @coroutine

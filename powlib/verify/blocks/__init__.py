@@ -1,5 +1,37 @@
 from cocotb.log          import SimLog
+from cocotb.result       import TestFailure
 from powlib.verify.block import Block, InPort, OutPort
+
+class SourceBlock(Block):
+    '''
+    A simply block whose only purpose is to provide
+    data into the design.
+    '''        
+
+    def __init__(self):
+        '''
+        Constructor.
+        '''
+        self.__outport    = OutPort(block=self)
+
+    def write(self, data):
+        '''
+        Writes data into the outport.
+        '''
+        self.__outport.write(data)
+
+    @property
+    def outport(self):
+        '''
+        Safely return the outport.
+        '''        
+        return self.__outport
+
+    def _behavior(self):
+        '''
+        Implements the behavior of the block.
+        '''        
+        raise NotImplemented("The behavior is not implemented for source block.")
 
 class SwissBlock(Block):
     '''
@@ -10,8 +42,8 @@ class SwissBlock(Block):
         '''
         Constructor.
         '''
-        self.__inports    = [InPort(parent=self) for _ in range(inputs)]
-        self.__outport    = OutPort(parent=self)
+        self.__inports    = [InPort(block=self) for _ in range(inputs)]
+        self.__outport    = OutPort(block=self)
         self.__trans_func = trans_func
         self.__cond_func  = cond_func
 
@@ -33,17 +65,17 @@ class SwissBlock(Block):
         '''
         Returns the specified inport.
         '''
-        return self.__inports(idx)
+        return self.__inports[idx]
 
     def _behavior(self):
         '''
         Implements the behavior of the block.
         '''
 
-        rdys = (inp.ready() for inp in self.__inports)
-        cond = self.__cond_func(*rdys)
+        rdys = [inp.ready() for inp in self.__inports]
+        cond = self.__cond_func(*rdys)        
         if cond:
-            data = (inp.read() for inp in self.__inports)
+            data = [inp.read() for inp in self.__inports]
             ret  = self.__trans_func(*data)
             if ret is not None: self.__outport.write(data=ret)                      
 
@@ -52,16 +84,17 @@ class ScoreBlock(SwissBlock):
     Used for scoring a set of values.
     '''
 
-    def __init__(self, inputs=1, name="", log_score=True):
+    def __init__(self, inputs=2, name="", log_score=True):
         '''
         '''
-        SwissBlock.__init__(self, inputs, self._score_func)
+        SwissBlock.__init__(self=self, trans_func=self._score_func, inputs=inputs)
         self.__log       = SimLog("cocotb.score.{}".format(name))
         self.__log_score = log_score
 
     def _score_func(self, *values):
         '''
         '''
+        #self.__log.info("DEBUG: {}".format(values))
         check   = values[0]
         state   = True
         message = ""
@@ -73,5 +106,21 @@ class ScoreBlock(SwissBlock):
 
         return state
 
+class AssertBlock(SwissBlock):
+    '''
+    Simply throws TestFailure if a False
+    is received.
+    '''        
+    def __init__(self):
+        '''
+        Assigns the transfer function to the 
+        failure method.
+        '''
+        SwissBlock.__init__(self, self._failure_func)
 
-
+    def _failure_func(self, state):
+        '''
+        If the state is False, a TestFailure()
+        is raised.
+        '''
+        if state==False: raise TestFailure()

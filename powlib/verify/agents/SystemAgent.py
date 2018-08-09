@@ -107,8 +107,7 @@ class ResetDriver(Driver):
             add_param(params=params, param_name="associated_clock", param_dict=param_dict)
             add_param(params=params, param_name="wait_cycles",      param_dict=param_dict)
             add_param(params=params, param_name="wait_time",        param_dict=param_dict)
-            self.__log.info("Initiating reset {}...".format(name))            
-            self.__log.info("DEBUG: {}".format(param_dict))
+            self.__log.info("Initiating reset {}...".format(name))                        
             cos.append(fork(start_reset(reset=handle, **param_dict)))
 
         # Wait until all start reset coroutines finish their operation.

@@ -55,7 +55,7 @@ class InPort(Port):
         Writes data into the inport and 
         initiates the behavior of the block associated
         with the inport.
-        '''
+        '''        
         self.__data.append(data)
         self._block._behavior()
     
@@ -89,16 +89,19 @@ class OutPort(Port):
     def connect(self, inport):
         '''
         Connects the specified inport to the
-        output.
+        output. This method also returns the
+        block associated with inport.
         '''
         if not isinstance(inport, InPort):
             raise TypeError("inport should be an instance of InpPort.")
-        self.__inports.append(inport)
+        self.__inports.append(inport)    
+        return inport._block
 
     def disconnect(self, inport):
         '''
         Searches for the specified inport, and disconnects it 
-        from the outport if found.
+        from the outport if found. Returns the block associated
+        with the inport.
         '''
         
         # Look for the first instance of the inport.
@@ -110,17 +113,16 @@ class OutPort(Port):
 
         # Remove the inport if it was found.                
         if ridx is not None:
-            del self.__inports[idx]                
-            return True
+            del self.__inports[idx]                            
 
-        return False            
+        return inport._block            
 
     def write(self, data):
         '''
         Writes data to all the inports connected to
         the this outport.
         '''
-        for inp in self.__inports:
+        for idx, inp in enumerate(self.__inports):            
             inp.write(data)
         
 

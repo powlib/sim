@@ -1,6 +1,6 @@
 from cocotb              import fork
 from cocotb.decorators   import coroutine
-from cocotb.triggers     import Event
+from cocotb.triggers     import Event, NullTrigger
 from powlib              import Interface, Transaction
 from powlib.verify.block import Block, InPort, OutPort
 from collections         import deque
@@ -43,6 +43,7 @@ class Driver(Component):
         self.__inport    = InPort(block=self)
         self.__queue     = deque()
         self.__event     = Event()
+        self.__flushevt  = Event()
         fork(self._drive())
 
     @property
@@ -58,6 +59,17 @@ class Driver(Component):
         '''
         self.__queue.append(data)        
         self._event.set()
+
+    @coroutine
+    def flush(self):
+        '''
+        Blocks until the driver's queue is
+        empty.
+        '''
+        if self._ready()==True:
+            self.__flushevt.clear()
+            yield self.__flushevt.wait()
+        yield NullTrigger()                    
 
     def _behavior(self):
         '''
@@ -83,10 +95,17 @@ class Driver(Component):
 
     def _read(self):
         '''
-        Reads data from the driver's queue.
-        '''      
-        try: return self.__queue.popleft()  
-        except IndexError: return None          
+        Reads data from the driver's queue. Returns the data is 
+        data is available. This method is also responsible for 
+        waking up the coroutine on which a flush might be yielding.
+        '''
+        try:
+            data = self.__queue.popleft()   
+            if self._ready()==False: 
+                self.__flushevt.set()
+            return data
+        except IndexError: 
+            return None                  
 
     @coroutine
     def _drive(self):

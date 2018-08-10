@@ -43,7 +43,13 @@ class RegisterDriver(Driver):
         '''
         self.__reset_active_mode = reset_active_mode
         self.__default_trans     = default_trans
-        Driver.__init__(self, RegisterInterface(**vars(interface)))
+        Driver.__init__(self, self._cast_interface(interface))
+
+    def _cast_interface(self, interface):
+        '''
+        Casts interface to a specific interface.
+        '''
+        return RegisterInterface(**vars(interface))
 
     @coroutine
     def _wait_reset(self):
@@ -125,7 +131,13 @@ class RegisterMonitor(Monitor):
         reset_active_mode =
         '''
         self.__reset_active_mode = reset_active_mode
-        Monitor.__init__(self, RegisterInterface(**vars(interface)))
+        Monitor.__init__(self, self._cast_interface(interface))
+
+    def _cast_interface(self, interface):
+        '''
+        Casts interface to a specific interface.
+        '''
+        return RegisterInterface(**vars(interface))        
 
     @coroutine
     def _wait_reset(self):

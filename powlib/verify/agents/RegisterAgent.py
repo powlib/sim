@@ -54,10 +54,8 @@ class RegisterDriver(Driver):
     @coroutine
     def _wait_reset(self):
         '''
-        Wait until reset is in an inactive state. Always wait the
-        first clock cycle by default.
+        Wait until reset is in an inactive state.
         '''
-        yield self._interface._synchronize()
         yield self._interface._wait_reset(active_mode=self.__reset_active_mode)
 
     @coroutine
@@ -114,8 +112,8 @@ class RegisterDriver(Driver):
         yield self._wait_reset()
         while True:           
             while (self._ready()):
-                yield self._synchronize()
                 yield self._write(self._read())
+                yield self._synchronize()                
             yield self._event.wait()
             self._event.clear()          
 

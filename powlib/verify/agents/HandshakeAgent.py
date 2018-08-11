@@ -4,9 +4,9 @@ from powlib.verify.agents.RegisterAgent import RegisterInterface, RegisterDriver
 from random                             import randint
 from types                              import GeneratorType
 
- CoinTossAllow = (randint(0, 1)==True for _ in iter(int, 1))
- AlwaysAllow   = (True                for _ in iter(int, 1)) 
- NeverAllow    = (False               for _ in iter(int, 1)) 
+CoinTossAllow = (randint(0, 1)==True for _ in iter(int, 1))
+AlwaysAllow   = (True                for _ in iter(int, 1)) 
+NeverAllow    = (False               for _ in iter(int, 1)) 
 
 class AllowFeature(object):
     '''
@@ -75,7 +75,15 @@ class HandshakeWriteDriver(RegisterDriver, AllowFeature):
         '''
         Casts interface to a specific interface.
         '''
-        return HandshakeInterface(**vars(interface))             
+        return HandshakeInterface(**vars(interface))    
+
+    @coroutine
+    def _write_default(self):
+        '''
+        Writes out the default state of the handshake interface.
+        '''
+        self._interface.vld.value = 0
+        yield RegisterDriver._write_default(self)
 
     @coroutine
     def _synchronize(self):
@@ -108,7 +116,7 @@ class HandshakeWriteDriver(RegisterDriver, AllowFeature):
         self._interface.vld.value = 1
         yield NullTrigger()           
 
-class HandshakeReadDriver(RegisterInterface, AllowFeature): 
+class HandshakeReadDriver(RegisterDriver, AllowFeature): 
     '''
     Carries out the reading side of the handshaking
     protocol.
@@ -122,6 +130,20 @@ class HandshakeReadDriver(RegisterInterface, AllowFeature):
         '''
         RegisterDriver.__init__(self, *args, **kwargs)
         self.allow = allow 
+
+    def _cast_interface(self, interface):
+        '''
+        Casts interface to a specific interface.
+        '''
+        return HandshakeInterface(**vars(interface))       
+
+    @coroutine
+    def _write_default(self):
+        '''
+        Writes out the default state of the handshake interface.
+        '''
+        self._interface.rdy.value = 0 
+        yield RegisterDriver._write_default(self)              
 
     def _ready(self):
         '''

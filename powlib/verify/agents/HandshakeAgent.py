@@ -1,4 +1,5 @@
 from cocotb.decorators                  import coroutine
+from cocotb.log                         import SimLog
 from cocotb.triggers                    import ReadOnly, RisingEdge, Edge, NullTrigger
 from powlib.verify.agents.RegisterAgent import RegisterInterface, RegisterDriver, RegisterMonitor
 from random                             import randint
@@ -10,7 +11,7 @@ NeverAllow    = (False               for _ in iter(int, 1))
 
 class AllowFeature(object):
     '''
-
+    This feature is intended to simulate congestion.
     '''
 
     @property
@@ -145,15 +146,8 @@ class HandshakeReadDriver(RegisterDriver, AllowFeature):
         self._interface.rdy.value = 0 
         yield RegisterDriver._write_default(self)              
 
-    def _ready(self):
-        '''
-        The read driver should always be ready to write out 
-        the ready control signal.
-        '''        
-        return True   
-
     @coroutine
-    def _write(self, data):
+    def _write(self):
         '''
         Writes out the queued data transasction
         to the interface.
@@ -162,13 +156,24 @@ class HandshakeReadDriver(RegisterDriver, AllowFeature):
         # Check the allow to determine if the driver is
         # allowed to set its ready.
         while next(self.allow)==False:
-            self._interface.rdy.vld = 0
+            self._interface.rdy.value = 0
             yield RegisterInterface._synchronize(self._interface)
 
         # Once it's finally allowed to read, set
         # the ready and continue.
         self._interface.rdy.value = 1
         yield NullTrigger()    
+
+    @coroutine
+    def _drive(self):
+        '''
+        Implement how data is driven with the RegisterDriver.
+        '''        
+        yield self._write_default()
+        yield self._wait_reset()
+        while True:           
+            yield self._write()
+            yield self._synchronize()            
 
     @property
     def inport(self):

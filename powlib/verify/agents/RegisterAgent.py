@@ -55,7 +55,8 @@ class RegisterDriver(Driver):
     def _wait_reset(self):
         '''
         Wait until reset is in an inactive state.
-        '''
+        '''        
+        yield RegisterInterface._synchronize(self._interface)
         yield self._interface._wait_reset(active_mode=self.__reset_active_mode)
 
     @coroutine
@@ -142,9 +143,9 @@ class RegisterMonitor(Monitor):
         '''
         Wait until reset is in an inactive state. Always wait the
         first clock cycle by default.
-        '''
-        yield self._interface._synchronize()
-        yield self._interface._wait_reset(active_mode=self.__reset_active_mode)
+        '''          
+        yield RegisterInterface._synchronize(self._interface)    
+        yield self._interface._wait_reset(active_mode=self.__reset_active_mode)        
     
     @coroutine
     def _synchronize(self):
@@ -167,9 +168,9 @@ class RegisterMonitor(Monitor):
     def _monitor(self):
         '''
         Carry out the behavior of the monitor.
-        '''
-        yield self._wait_reset()
-        while True:
-            yield self._synchronize()
+        '''        
+        yield self._wait_reset()                
+        while True:            
+            yield self._synchronize()            
             yield self._read()
 

@@ -1,5 +1,5 @@
 from cocotb.log          import SimLog
-from cocotb.result       import TestFailure
+from cocotb.result       import TestFailure, TestSuccess
 from powlib.verify.block import Block, InPort, OutPort
 
 class SourceBlock(Block):
@@ -94,7 +94,6 @@ class ScoreBlock(SwissBlock):
     def _score_func(self, *values):
         '''
         '''
-        #self.__log.info("DEBUG: {}".format(values))
         check   = values[0]
         state   = True
         message = ""
@@ -113,7 +112,7 @@ class AssertBlock(SwissBlock):
     '''        
     def __init__(self):
         '''
-        Assigns the transfer function to the 
+        Assigns the transfer function the 
         failure method.
         '''
         SwissBlock.__init__(self, self._failure_func)
@@ -124,3 +123,21 @@ class AssertBlock(SwissBlock):
         is raised.
         '''
         if state==False: raise TestFailure()
+
+class SucceedBlock(SwissBlock):
+    '''
+    Simply throws TestSuccess if a True is received.
+    '''     
+    def __init__(self):
+        '''
+        Assigns the transfer function the 
+        succeed method.
+        '''
+        SwissBlock.__init__(self, self._success_func)
+
+    def _success_func(self, state):
+        '''
+        If the state is False, a TestFailure()
+        is raised.
+        '''
+        if state==True: raise TestSuccess()

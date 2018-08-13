@@ -2,6 +2,9 @@ from cocotb.log          import SimLog
 from cocotb.result       import TestFailure, TestSuccess
 from powlib.verify.block import Block, InPort, OutPort
 
+AllCondFunc = lambda *rdys : all(rdys)
+AnyCondFunc = lambda *rdys : any(rdys)
+
 class SourceBlock(Block):
     '''
     A simply block whose only purpose is to provide
@@ -38,7 +41,7 @@ class SwissBlock(Block):
     A block from which many other various blocks can be created.
     '''
 
-    def __init__(self, trans_func, cond_func = lambda *rdys : all(rdys), inputs=1):
+    def __init__(self, trans_func, cond_func=AllCondFunc, inputs=1):
         '''
         Constructor.
         '''
@@ -141,3 +144,18 @@ class SucceedBlock(SwissBlock):
         is raised.
         '''
         if state==True: raise TestSuccess()
+
+class CountBlock(SwissBlock):
+    '''
+    Increments upon an input. Returns true once
+    the count reach the total.
+    '''
+
+    def __init__(self, total, inputs):
+        SwissBlock.__init__(self=self, trans_func=self._count_func, inputs=inputs)
+        self.__total = total
+        self.__count = 0
+
+    def _count_func(self, *ignore):
+        self.__count += 1
+        return self.__count==self.__total        

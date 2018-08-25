@@ -2,8 +2,40 @@ from cocotb.log          import SimLog
 from cocotb.result       import TestFailure, TestSuccess
 from powlib.verify.block import Block, InPort, OutPort
 
+# Condition functions intended to be used with SwissBlock
 AllCondFunc = lambda *rdys : all(rdys)
 AnyCondFunc = lambda *rdys : any(rdys)
+
+def ComposeBlocks(*blocks):
+    '''
+    A utility function used for quickly connecting blocks that define
+    inport and outport attributes. The first block only needs an outport,
+    whereas the last block only needs an inport. Every block in between
+    needs both.
+    '''
+    previous_block = None
+    for block in blocks:
+        if not isinstance(block,Block):
+            raise TypeError("Only blocks can be composed.")        
+        if previous_block is not None:
+            previous_block.outport.connect(block.inport)
+        previous_block = block                  
+
+class ComposedBlock(Block):
+    '''
+    A class wrapper for composing blocks. Works the same as ComposeBlocks,
+    however this class contains members for the inport of the first block
+    and the outport of the last block, if the ports exist.
+    '''
+    def __init__(self, *blocks):
+        ComposeBlocks(*blocks)
+        self.__inport  = blocks[0].inport   if hasattr(blocks[0],"inport")   else None
+        self.__outport = blocks[-1].outport if hasattr(blocks[-1],"outport") else None
+
+    inport  = property(lambda self : self.__inport)
+    outport = property(lambda self : self.__outport)                      
+
+    def _behavior(self): raise NotImplemented("Composed blocks don't implement their own behavior.")        
 
 class SourceBlock(Block):
     '''
@@ -159,3 +191,16 @@ class CountBlock(SwissBlock):
     def _count_func(self, *ignore):
         self.__count += 1
         return self.__count==self.__total        
+
+class PrintBlock(SwissBlock):
+    '''
+    Simply prints out the data it
+    receives.
+    '''
+    def __init__(self, name="data"):
+        SwissBlock.__init__(self=self, trans_func=self._print_func)
+        self.__log       = SimLog("cocotb.print.{}".format(name))
+
+    def _print_func(self, data):
+        self.__log.info("{}".format(data))        
+

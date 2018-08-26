@@ -19,10 +19,15 @@ class Namespace(object):
         '''
         Represent the Namespace as a string.
         '''
-
         indat = "".join("({}={})".format(field, value) for field, value in vars(self).items())
         full  = "{}({})".format(self.__class__.__name__,indat)
         return full
+
+    def __repr__(self):
+        '''
+        This method also needs to be defined for string representation.
+        '''
+        return self.__str__()        
 
     def issubsetof(self, namespace):
         '''
@@ -53,7 +58,12 @@ class Transaction(Namespace):
     Used to quickly create a Transaction, which
     is used in a lot of the cocotb high-level operations.
     '''
-    pass
+    def __hash__(self):
+        '''
+        Transactions are considered hashable so that they can 
+        be used within sets.
+        '''            
+        return hash(tuple(list(vars(self).items())))        
 
 class Interface(Namespace):
     '''

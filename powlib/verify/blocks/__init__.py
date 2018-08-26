@@ -29,8 +29,8 @@ class ComposedBlock(Block):
     '''
     def __init__(self, *blocks):
         ComposeBlocks(*blocks)
-        self.__inport  = blocks[0].inport   if hasattr(blocks[0],"inport")   else None
-        self.__outport = blocks[-1].outport if hasattr(blocks[-1],"outport") else None
+        self.__inport  = blocks[0].inport   if hasattr(blocks[0], "inport")   else None
+        self.__outport = blocks[-1].outport if hasattr(blocks[-1],"outport")  else None
 
     inport  = property(lambda self : self.__inport)
     outport = property(lambda self : self.__outport)                      

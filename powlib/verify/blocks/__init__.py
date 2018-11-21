@@ -122,7 +122,7 @@ class ScoreBlock(SwissBlock):
     def __init__(self, inputs=2, name="", log_score=True):
         '''
         '''
-        SwissBlock.__init__(self=self, trans_func=self._score_func, inputs=inputs)
+        SwissBlock.__init__(self, trans_func=self._score_func, inputs=inputs)
         self.__log       = SimLog("cocotb.score.{}".format(name))
         self.__log_score = log_score
 
@@ -184,7 +184,7 @@ class CountBlock(SwissBlock):
     '''
 
     def __init__(self, total, inputs):
-        SwissBlock.__init__(self=self, trans_func=self._count_func, inputs=inputs)
+        SwissBlock.__init__(self, trans_func=self._count_func, inputs=inputs)
         self.__total = total
         self.__count = 0
 
@@ -198,7 +198,7 @@ class PrintBlock(SwissBlock):
     receives.
     '''
     def __init__(self, name="data"):
-        SwissBlock.__init__(self=self, trans_func=self._print_func)
+        SwissBlock.__init__(self, trans_func=self._print_func)
         self.__log       = SimLog("cocotb.print.{}".format(name))
 
     def _print_func(self, data):

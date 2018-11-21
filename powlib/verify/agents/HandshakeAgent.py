@@ -63,7 +63,7 @@ class HandshakeWriteDriver(RegisterDriver, AllowFeature):
     protocol.
     '''
 
-    def __init__(self, *args, allow=AlwaysAllow, **kwargs):
+    def __init__(self, allow=AlwaysAllow, *args, **kwargs):
         '''
         This constructor extends the register driver's
         constructor to permit the selection of an 
@@ -123,7 +123,7 @@ class HandshakeReadDriver(RegisterDriver, AllowFeature):
     protocol.
     '''
 
-    def __init__(self, *args, allow=AlwaysAllow, **kwargs):
+    def __init__(self, allow=AlwaysAllow, *args, **kwargs):
         '''
         This constructor extends the register driver's
         constructor to permit the selection of an 

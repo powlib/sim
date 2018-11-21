@@ -1,22 +1,20 @@
 
-from abc         import ABCMeta, abstractmethod
 from collections import deque
 
-class Block(object,metaclass=ABCMeta):
+class Block(object):
     '''
     The basic build "block". The intention is to provide
     system with which simulations can be functionally divided
     and organized.
     '''
 
-    @abstractmethod
     def _behavior(self):
         '''
         The behavior of a block is used to 
         implement the operations a block must execute
         upon the reception of new data via an inport.
         '''
-        pass
+        raise NotImplementedError("The behavior of the block must be implemented.")
 
 class Port(object):
     '''

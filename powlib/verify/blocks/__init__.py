@@ -1,6 +1,8 @@
-from cocotb.log          import SimLog
-from cocotb.result       import TestFailure, TestSuccess
-from powlib.verify.block import Block, InPort, OutPort
+from cocotb.log                      import SimLog
+from cocotb.result                   import TestFailure, TestSuccess
+from powlib.verify.block             import Block, InPort, OutPort
+from powlib.verify.agents.BusAgent   import OP_WRITE, OP_READ
+from powlib                          import Transaction
 
 # Condition functions intended to be used with SwissBlock
 AllCondFunc = lambda *rdys : all(rdys)
@@ -269,4 +271,45 @@ class RamBlock(SwissBlock):
         else:
             return self.read(addr=trans.addr)
         
-
+class BusRamConvertBlock(Block):
+    '''
+    '''
+    
+    def __init__(self, bpd=4):
+        '''
+        '''
+        self.__bpd        = bpd
+        self.__busInport  = InPort(block=self)
+        self.__busOutport = OutPort(block=self)
+        self.__ramInport  = InPort(block=self)
+        self.__ramOutport = OutPort(block=self)
+        
+    busInport  = property(lambda self : self.__busInport)
+    busOutport = property(lambda self : self.__busOutport)
+    ramInport  = property(lambda self : self.__ramInport)
+    ramOutport = property(lambda self : self.__ramOutport)
+    
+    def _behavior(self):
+        '''
+        Implements the behavior of the converter block.
+        '''
+        
+        if self.busInport.ready():
+            trans = self.busInport.read()
+            op    = int(trans.op.value)
+            if   op==OP_WRITE:
+                self.ramOutport.write(data=Transaction(addr=int(trans.addr),
+                                                       data=int(trans.data),
+                                                       be=int(trans.be)))
+            elif op==OP_READ:
+                self.ramOutport.write(data=Transaction(addr=int(trans.addr),
+                                                       be=int(trans.be)))
+                assert(self.ramInport.ready())
+                data = self.ramInport.read()
+                self.busOutport.write(data=Transaction(addr=int(trans.data),
+                                                       data=data,
+                                                       be=int((1<<self.__bpd)-1),
+                                                       op=OP_WRITE))
+            else: raise ValueError("op of value {} isn't defined.".format(op))
+                
+            

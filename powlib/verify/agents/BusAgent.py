@@ -1,4 +1,4 @@
-from cocotb.binary                       import BinaryValue
+
 from cocotb.decorators                   import coroutine
 from cocotb.triggers                     import Event
 from cocotb.result                       import ReturnValue
@@ -27,15 +27,15 @@ class BusAgent(Agent):
         '''
         
         Agent.__init__(self, drivers=Namespace(wr=HandshakeWriteDriver(interface=wrInterface),
-                                       rd=HandshakeReadDriver(interface=rdInterface)),
+                                               rd=HandshakeReadDriver(interface=rdInterface)),
                              monitors=Namespace(wr=HandshakeMonitor(interface=wrInterface),
-                                       rd=HandshakeMonitor(interface=rdInterface)))
+                                                rd=HandshakeMonitor(interface=rdInterface)))
         
-        self.__rdEvent     = Event
+        self.__rdEvent     = Event()
         self.__baseAddr    = baseAddr
 
-    inport       = property(lambda self : self._driver.wr.inport)
-    outport      = property(lambda self : self._monitor.rd.outport)
+    inport       = property(lambda self : self._drivers.wr.inport)
+    outport      = property(lambda self : self._monitors.rd.outport)
         
     def _behavior(self):
         '''
@@ -51,9 +51,9 @@ class BusAgent(Agent):
         is the operation, which, by default is write.
         '''
         if be is None:
-            beWidth = len(self._interface.wr.be)
-            be      = BinaryValue(value=((1<<beWidth)-1), bits=beWidth)
-        self._driver.wr.write(data=Transaction(addr=addr,data=data,be=be,op=op))
+            beWidth = len(self._drivers.wr._interface.be)
+            be      = int(((1<<beWidth)-1))
+        self._drivers.wr.write(data=Transaction(addr=addr,data=data,be=be,op=op))
         
     @coroutine
     def read(self, addr):
@@ -61,13 +61,13 @@ class BusAgent(Agent):
         Reads data from the bus interface. 
         '''
         rdInport = InPort(block=self)
-        self._monitor.rd.outport.connect(rdInport)
+        self._monitors.rd.outport.connect(rdInport)
         self.__rdEvent.clear()
         self.write(addr=addr, data=self.__baseAddr, op=OP_READ)
         yield self.__rdEvent.wait()
         assert(rdInport.ready())
         trans = rdInport.read()
-        self._monitor.rd.outport.disconnect(rdInport)
+        self._monitors.rd.outport.disconnect(rdInport)
         raise ReturnValue(trans)
         
                 

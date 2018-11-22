@@ -23,14 +23,14 @@ class Agent(Block):
         if not isinstance(drivers, Namespace):
             raise TypeError("drivers must be a Namespace.")
             
-        for key, item in vars(drivers):
+        for key, item in vars(drivers).items():
             if not isinstance(item, Driver):
                 raise TypeError("drivers must be a Namespace of Drivers.")
             
         if monitors is not None:
             if not isinstance(monitors, Namespace):
                 raise TypeError("monitors must be a Namespace.")
-            for key, item in vars(monitors):
+            for key, item in vars(monitors).items():
                 if not isinstance(item, Monitor):
                     raise TypeError("monitors must be a Namespace of Monitors.")  
                     

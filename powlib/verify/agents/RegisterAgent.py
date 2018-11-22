@@ -1,9 +1,9 @@
-from cocotb.log              import SimLog
+
 from cocotb.decorators       import coroutine
 from cocotb.triggers         import ReadOnly, RisingEdge, Edge, NullTrigger
 
-from powlib.verify.component import Driver, Monitor, Component
-from powlib                  import Interface, Transaction
+from powlib.verify.component import Driver, Monitor
+from powlib                  import Interface
 
 class RegisterInterface(Interface):
     '''

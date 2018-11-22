@@ -30,13 +30,13 @@ class ClockDriver(Driver):
         '''
         Not data should be written to the clock driver.
         '''
-        raise NotImplemented("Do not write data into the clock driver.")
+        raise NotImplementedError("Do not write data into the clock driver.")
 
     def write(self, data):
         '''
         Not data should be written to the clock driver.
         '''
-        raise NotImplemented("Do not write data into the clock driver.")   
+        raise NotImplementedError("Do not write data into the clock driver.")   
 
     @coroutine
     def _drive(self):        

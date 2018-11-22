@@ -1,7 +1,7 @@
 from cocotb              import fork
 from cocotb.decorators   import coroutine
 from cocotb.triggers     import Event, NullTrigger
-from powlib              import Interface, Transaction
+from powlib              import Interface
 from powlib.verify.block import Block, InPort, OutPort
 from collections         import deque
 
@@ -117,7 +117,7 @@ class Driver(Component):
         synchronization, the _interface property should be used for
         acquiring the handles.
         '''
-        raise NotImplemented("The drive coroutine should be implemented.")               
+        raise NotImplementedError("The drive coroutine should be implemented.")               
         
 class Monitor(Component):
     '''
@@ -154,7 +154,7 @@ class Monitor(Component):
         valid transactions on the specified interface, and then outputs
         them with the outport.
         '''
-        raise NotImplemented("The monitor coroutine should be implemented.")        
+        raise NotImplementedError("The monitor coroutine should be implemented.")        
 
 
 

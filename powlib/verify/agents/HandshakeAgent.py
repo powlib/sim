@@ -1,6 +1,5 @@
 from cocotb.decorators                  import coroutine
-from cocotb.log                         import SimLog
-from cocotb.triggers                    import ReadOnly, RisingEdge, Edge, NullTrigger
+from cocotb.triggers                    import RisingEdge, NullTrigger
 from powlib.verify.agents.RegisterAgent import RegisterInterface, RegisterDriver, RegisterMonitor
 from random                             import randint
 from types                              import GeneratorType
@@ -180,20 +179,20 @@ class HandshakeReadDriver(RegisterDriver, AllowFeature):
         '''
         Do not used this method with read port.
         '''
-        raise NotImplemented("inport should not be used with the read driver.")
+        raise NotImplementedError("inport should not be used with the read driver.")
 
     def write(self, data):
         '''
         Do not used this method with read port.
         '''
-        raise NotImplemented("write should not be used with the read driver.")
+        raise NotImplementedError("write should not be used with the read driver.")
 
     @coroutine
     def flush(self):
         '''
         Do not used this method with read port.
         '''
-        raise NotImplemented("flush should not be used with the read driver.")
+        raise NotImplementedError("flush should not be used with the read driver.")
         yield NullTrigger()          
 
 class HandshakeMonitor(RegisterMonitor):

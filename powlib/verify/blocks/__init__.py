@@ -35,7 +35,7 @@ class ComposedBlock(Block):
     inport  = property(lambda self : self.__inport)
     outport = property(lambda self : self.__outport)                      
 
-    def _behavior(self): raise NotImplemented("Composed blocks don't implement their own behavior.")        
+    def _behavior(self): raise NotImplementedError("Composed blocks don't implement their own behavior.")        
 
 class SourceBlock(Block):
     '''
@@ -66,7 +66,7 @@ class SourceBlock(Block):
         '''
         Implements the behavior of the block.
         '''        
-        raise NotImplemented("The behavior is not implemented for source block.")
+        raise NotImplementedError("The behavior is not implemented for source block.")
 
 class SwissBlock(Block):
     '''
@@ -75,7 +75,13 @@ class SwissBlock(Block):
 
     def __init__(self, trans_func, cond_func=AllCondFunc, inputs=1):
         '''
-        Constructor.
+        Constructor. The trans_func is a function that should define the
+        behavior of the swiss block. Its input parameters are the values read from each
+        of the inports. If it returns a value, that value will be written to 
+        the SwissBlock's outport. cond_func is a function that should determine
+        when the trans_func is called. Its input parameters are the ready booleans
+        of the inports. It should return another boolean, where True causes the
+        trans_func to be called.
         '''
         self.__inports    = [InPort(block=self) for _ in range(inputs)]
         self.__outport    = OutPort(block=self)
@@ -121,6 +127,7 @@ class ScoreBlock(SwissBlock):
 
     def __init__(self, inputs=2, name="", log_score=True):
         '''
+        Constructor.
         '''
         SwissBlock.__init__(self, trans_func=self._score_func, inputs=inputs)
         self.__log       = SimLog("cocotb.score.{}".format(name))
@@ -128,6 +135,8 @@ class ScoreBlock(SwissBlock):
 
     def _score_func(self, *values):
         '''
+        Checks to see if all the inputs presented in values are the same. If they're 
+        the same, a True is returned, otherwise a False is returned.
         '''
         check   = values[0]
         state   = True

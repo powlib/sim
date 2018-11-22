@@ -6,6 +6,10 @@ from powlib.verify.block import Block, InPort, OutPort
 AllCondFunc = lambda *rdys : all(rdys)
 AnyCondFunc = lambda *rdys : any(rdys)
 
+# Constants needed by the ram block.
+BYTE_WIDTH = 8
+BYTE_MASK  = (1<<BYTE_WIDTH)-1
+
 def ComposeBlocks(*blocks):
     '''
     A utility function used for quickly connecting blocks that define
@@ -211,5 +215,58 @@ class PrintBlock(SwissBlock):
         self.__log       = SimLog("cocotb.print.{}".format(name))
 
     def _print_func(self, data):
-        self.__log.info("{}".format(data))        
+        self.__log.info("{}".format(data))  
+        
+class RamBlock(SwissBlock):
+    '''
+    This is simulated RAM. Very useful since a test that needs RAM won't need
+    RAM implemented in the hardware description.
+    '''
+    
+    def __init__(self, bpd=4, defaultByte=0x00):
+        '''
+        Constructor. bpd is the bytes-per-data word. defaultByte is the byte that
+        will be returned if a read is issue on a location that hasn't been written
+        to.
+        '''
+        SwissBlock.__init__(self, trans_func=self._ram_func)
+        self.__ram         = {}
+        self.__bpd         = bpd
+        self.__defaultByte = defaultByte&BYTE_MASK
+    
+    def write(self, addr, data, be=0xF):
+        '''
+        Writes data to the ram block. addr refers to the address. data
+        refers to the word that will be written to the ram. be is the byte enable.
+        '''
+        for each_byte in range(self.__bpd):
+            if be&1:
+                byte                 = data&BYTE_MASK
+                byteAddr             = addr+each_byte
+                self.__ram[byteAddr] = byte
+            data >>= BYTE_WIDTH
+            be   >>= 1
+            
+    def read(self, addr):
+        '''
+        Reads a word from the ram. addr is the address from where the data will
+        be read.
+        '''
+        data = 0
+        for each_byte in range(self.__bpd):
+            byteAddr = addr+each_byte
+            byte     = self.__ram.get(byteAddr, self.__defaultByte)
+            data    |= byte<<(each_byte*BYTE_WIDTH)
+        return data
+    
+    def _ram_func(self, trans):
+        '''
+        Implements the behavior of the ram so that other blocks can perform
+        operations with it via ports.
+        '''
+        if hasattr(trans, "data"):
+            self.write(addr=trans.addr, data=trans.data, be=trans.be)
+        else:
+            return self.read(addr=trans.addr)
+        
 

@@ -7,14 +7,14 @@ from powlib.verify.agents.HandshakeAgent import HandshakeWriteDriver, \
                                                 HandshakeReadDriver, \
                                                 HandshakeMonitor
 from powlib.verify.block                 import InPort
-from powlib.verify.component             import Component
-from powlib                              import Interface, Namespace, Transaction 
+from powlib.verify.agent                 import Agent
+from powlib                              import Namespace, Transaction 
     
 
 OP_WRITE = 0
 OP_READ  = 1
 
-class Bus(Component):
+class BusAgent(Agent):
     '''
     This component implements the powlib bus protocol, an interface through 
     both simulation and hardware components can access a powlib interconnect. Please
@@ -26,21 +26,14 @@ class Bus(Component):
         Constructor.
         '''
         
-        if not (isinstance(wrInterface, Interface) and isinstance(rdInterface, Interface)):
-            raise TypeError("interfaces should be an Interface.")
-        
-        self.__interface   = Namespace(wr=wrInterface,rd=rdInterface)
-        self.__driver      = Namespace(wr=HandshakeWriteDriver(interface=wrInterface),
-                                       rd=HandshakeReadDriver(interface=rdInterface))
-        self.__monitor     = Namespace(wr=HandshakeMonitor(interface=wrInterface),
-                                       rd=HandshakeMonitor(interface=rdInterface))
+        Agent.__init__(self, drivers=Namespace(wr=HandshakeWriteDriver(interface=wrInterface),
+                                       rd=HandshakeReadDriver(interface=rdInterface)),
+                             monitors=Namespace(wr=HandshakeMonitor(interface=wrInterface),
+                                       rd=HandshakeMonitor(interface=rdInterface)))
         
         self.__rdEvent     = Event
         self.__baseAddr    = baseAddr
 
-        
-    _driver      = property(lambda self : self.__driver)
-    _monitor     = property(lambda self : self.__monitor)
     inport       = property(lambda self : self._driver.wr.inport)
     outport      = property(lambda self : self._monitor.rd.outport)
         

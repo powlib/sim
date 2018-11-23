@@ -58,16 +58,43 @@ class BusAgent(Agent):
     @coroutine
     def read(self, addr):
         '''
-        Reads data from the bus interface. 
+        Reads data from the bus interface. addr specifies where to read. If
+        addr is an int, then only a single read will occur. If addr is a list,
+        a burst of reads will occur.
         '''
+        
+        # Create the receiving port. Clear the event.
         rdInport = InPort(block=self)
         self._monitors.rd.outport.connect(rdInport)
-        self.__rdEvent.clear()
-        self.write(addr=addr, data=self.__baseAddr, op=OP_READ)
-        yield self.__rdEvent.wait()
-        assert(rdInport.ready())
-        trans = rdInport.read()
+        
+        # Prepare the list of read transactions.
+        if isinstance(addr, int):
+            addrList = [addr]
+        elif isinstance(addr, list):
+            addrList = addr
+        else: raise TypeError("addr must be either int or list.")
+        
+        # Write out the burst read.
+        for each_addr in addrList:
+            self.write(addr=each_addr, data=self.__baseAddr, op=OP_READ)
+            
+        # Read each word.
+        transList = []
+        for each_read in range(len(addrList)):
+            self.__rdEvent.clear()
+            yield self.__rdEvent.wait()
+            assert(rdInport.ready())
+            trans = rdInport.read()
+            transList.append(trans)
+            
+        # Disconnect the port.
         self._monitors.rd.outport.disconnect(rdInport)
-        raise ReturnValue(trans)
+        
+        # If only a single read occurs, then return on the single transaction.
+        # If a burst, then return the list.
+        if len(transList)==1:
+            raise ReturnValue(transList[0])
+        else:
+            raise ReturnValue(transList)
         
                 

@@ -14,18 +14,18 @@ class Agent(Block):
     monitors.
     '''
     
-    def __init__(self, drivers, monitors=None):
+    def __init__(self, drivers=None, monitors=None):
         '''
         Constructor. drivers should be a Namespace of Drivers, whereas 
-        the optional monitors should be a Namespace of Monitors.
+        the monitors should be a Namespace of Monitors.
         '''
         
-        if not isinstance(drivers, Namespace):
-            raise TypeError("drivers must be a Namespace.")
-            
-        for key, item in vars(drivers).items():
-            if not isinstance(item, Driver):
-                raise TypeError("drivers must be a Namespace of Drivers.")
+        if drivers is not None:
+            if not isinstance(drivers, Namespace):
+                raise TypeError("drivers must be a Namespace.")
+            for key, item in vars(drivers).items():
+                if not isinstance(item, Driver):
+                    raise TypeError("drivers must be a Namespace of Drivers.")
             
         if monitors is not None:
             if not isinstance(monitors, Namespace):

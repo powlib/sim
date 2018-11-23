@@ -154,6 +154,14 @@ class ScoreBlock(SwissBlock):
         if self.__log_score==True: self.__log.info(message)
 
         return state
+    
+    def compare(self, *args):
+        '''
+        Directly write values for comparison to the score block.
+        '''
+        for idx, arg in enumerate(args):
+            self.inports(idx).write(data=arg)
+        
 
 class AssertBlock(SwissBlock):
     '''
@@ -273,10 +281,13 @@ class RamBlock(SwissBlock):
         
 class BusRamConvertBlock(Block):
     '''
+    Connects between a BusAgent and RamBlock. This allows simulated RAM, i.e.
+    the RamBlock, for use in hardware.
     '''
     
     def __init__(self, bpd=4):
         '''
+        Constructor. bpd is the number of bytes in a data word.
         '''
         self.__bpd        = bpd
         self.__busInport  = InPort(block=self)

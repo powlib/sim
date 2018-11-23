@@ -21,15 +21,21 @@ class BusAgent(Agent):
     note that bus in this context is used to refer to the interface protocol.
     '''
     
-    def __init__(self, wrInterface, rdInterface, baseAddr):
+    def __init__(self, wrInterface, rdInterface, baseAddr=None, passive=False):
         '''
-        Constructor.
+        Constructor. wrInterface and rdInterface should be a HandshakeInterface 
+        with the signals addr, data, be, and op. wrInterface should be assosicated
+        with the writing SimHandles, whereas rdInterface should be associated with
+        the reading SimHandles. baseAddr should be the base address of the interface, 
+        however it's optional if there's no intent to read or the BusAgent is passive.
         '''
         
-        Agent.__init__(self, drivers=Namespace(wr=HandshakeWriteDriver(interface=wrInterface),
-                                               rd=HandshakeReadDriver(interface=rdInterface)),
-                             monitors=Namespace(wr=HandshakeMonitor(interface=wrInterface),
-                                                rd=HandshakeMonitor(interface=rdInterface)))
+        drivers = Namespace(wr=HandshakeWriteDriver(interface=wrInterface),
+                            rd=HandshakeReadDriver(interface=rdInterface)) if not passive else None
+        monitors = Namespace(wr=HandshakeMonitor(interface=wrInterface),
+                             rd=HandshakeMonitor(interface=rdInterface))
+        
+        Agent.__init__(self, drivers=drivers, monitors=monitors)
         
         self.__rdEvent     = Event()
         self.__baseAddr    = baseAddr

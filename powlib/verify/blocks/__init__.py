@@ -168,19 +168,19 @@ class AssertBlock(SwissBlock):
     Simply throws TestFailure if a False
     is received.
     '''        
-    def __init__(self):
+    def __init__(self, inputs=1):
         '''
         Assigns the transfer function the 
         failure method.
         '''
-        SwissBlock.__init__(self, self._failure_func)
+        SwissBlock.__init__(self, trans_func=self._failure_func, inputs=inputs)
 
-    def _failure_func(self, state):
+    def _failure_func(self, *states):
         '''
         If the state is False, a TestFailure()
         is raised.
         '''
-        if state==False: raise TestFailure()
+        if any(state==False for state in states): raise TestFailure()
 
 class SucceedBlock(SwissBlock):
     '''

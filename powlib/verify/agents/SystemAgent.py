@@ -81,7 +81,9 @@ class ResetDriver(Driver):
         Yield on this method as a way to wait until
         all resets finish their operation.
         '''
-        yield self.__event.wait()
+        if not self.__event.fired:
+            yield self.__event.wait()
+        yield NullTrigger()
 
     @coroutine
     def _drive(self):        

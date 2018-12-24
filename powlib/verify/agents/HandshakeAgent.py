@@ -140,10 +140,11 @@ class HandshakeReadDriver(RegisterDriver, AllowFeature):
     @coroutine
     def _write_default(self):
         '''
-        Writes out the default state of the handshake interface.
+        Writes out the default state of the handshake interface. Do not
+        write over the data signals since we're reading from them.
         '''
         self._interface.rdy.value = 0 
-        yield RegisterDriver._write_default(self)              
+        yield NullTrigger()            
 
     @coroutine
     def _write(self):

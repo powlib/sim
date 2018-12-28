@@ -74,11 +74,11 @@ class BusAgent(Agent):
         self._monitors.rd.outport.connect(rdInport)
         
         # Prepare the list of read transactions.
-        if isinstance(addr, int):
+        if isinstance(addr, int) or isinstance(addr, long):
             addrList = [addr]
         elif isinstance(addr, list):
             addrList = addr
-        else: raise TypeError("addr must be either int or list.")
+        else: raise TypeError("addr must be either int/long or list.")
         
         # Write out the burst read.
         for each_addr in addrList:

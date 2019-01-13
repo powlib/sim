@@ -91,7 +91,7 @@ class OutPort(Port):
         block associated with inport.
         '''
         if not isinstance(inport, InPort):
-            raise TypeError("inport should be an instance of InpPort.")
+            raise TypeError("inport should be an instance of InPort.")
         self.__inports.append(inport)    
         return inport._block
 

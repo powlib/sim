@@ -40,6 +40,17 @@ class RegisterDriver(Driver):
     def __init__(self, interface, default_trans=None, reset_active_mode=1):
         '''
         Constructor. 
+        
+        interface should be a RegisterInterface, or a derivative thereof.
+        
+        default_trans should be either None, indicating no default transaction,
+        or a Transaction whose member names are the data signals of the interface.
+        The values assigned to the Transaction's members will be the first set
+        of values assigned to the interface's data signals. These defaults will not
+        be assigned again.
+        
+        reset_active_mode should be either 1 or 0, former indicating reset-active
+        on high and the latter indicating reset-active on low.
         '''
         self.__reset_active_mode = reset_active_mode
         self.__default_trans     = default_trans

@@ -74,7 +74,11 @@ class BusAgent(Agent):
         self._monitors.rd.outport.connect(rdInport)
         
         # Prepare the list of read transactions.
-        if isinstance(addr, int) or isinstance(addr, long):
+        isinstance_long = False
+        try:
+            isinstance_long = isinstance(addr, long)
+        except NameError: pass
+        if isinstance(addr, int) or isinstance_long:
             addrList = [addr]
         elif isinstance(addr, list):
             addrList = addr

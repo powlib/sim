@@ -127,7 +127,8 @@ class RegisterDriver(Driver):
                 yield self._write(self._read())
                 yield self._synchronize()                
             yield self._event.wait()
-            self._event.clear()          
+            self._event.clear()
+            yield RegisterInterface._synchronize(self._interface)
 
 class RegisterMonitor(Monitor):
     '''
@@ -137,8 +138,11 @@ class RegisterMonitor(Monitor):
     def __init__(self, interface, reset_active_mode=1):
         '''
         Constructor. 
-        interface         = 
-        reset_active_mode =
+
+        interface should be a RegisterInterface, or a derivative thereof.
+        
+        reset_active_mode should be either 1 or 0, former indicating reset-active
+        on high and the latter indicating reset-active on low.        
         '''
         self.__reset_active_mode = reset_active_mode
         Monitor.__init__(self, self._cast_interface(interface))

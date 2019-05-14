@@ -2,8 +2,11 @@
 from cocotb.decorators       import coroutine
 from cocotb.triggers         import ReadOnly, RisingEdge, Edge, NullTrigger
 
+from powlib.verify.block     import main
 from powlib.verify.component import Driver, Monitor
 from powlib                  import Interface
+
+from asyncio                 import run
 
 class RegisterInterface(Interface):
     '''
@@ -176,7 +179,8 @@ class RegisterMonitor(Monitor):
         Samples from the interface and writes it out 
         on to the outport.
         '''        
-        self.outport.write(self._interface.read())    
+        run(self.outport.write(self._interface.read()))
+        run(main())
         yield NullTrigger()
 
     @coroutine

@@ -1,5 +1,16 @@
 
-from collections import deque
+from asyncio     import run, Queue, gather, QueueEmpty
+
+_coroutines = []
+
+async def main():
+    '''
+    Defines the main async function that initiates all
+    the coroutines.
+    '''    
+    if len(_coroutines)!=0:
+        while any(await gather(*(coroutine() for coroutine in _coroutines))):
+            pass
 
 class Block(object):
     '''
@@ -7,8 +18,34 @@ class Block(object):
     system with which simulations can be functionally divided
     and organized.
     '''
+    
+    def __init__(self):
+        '''
+        Constructor. Only purpose is to add the coroutine to the 
+        coroutine list.
+        '''
+        self.__ports = []
+        _coroutines.append(self._coroutine)        
+        
+    def _add_port(self, port):
+        '''
+        Associates port with block.
+        '''
+        if not (isinstance(port, InPort) or isinstance(port, OutPort)):
+            raise TypeError("port must be either an InPort or OutPort.")
+        self.__ports.append(port)
+    
+    async def _coroutine(self):
+        '''
+        Defines the coroutine. The behavior of a coroutine only occurs when
+        an InPort is ready with data.
+        '''
+        if any(isinstance(port, InPort) and port.ready() for port in self.__ports):
+            await self._behavior()
+            return any(isinstance(port, OutPort) and port._check() for port in self.__ports)
+        return False
 
-    def _behavior(self):
+    async def _behavior(self):
         '''
         The behavior of a block is used to 
         implement the operations a block must execute
@@ -27,6 +64,7 @@ class Port(object):
         '''
         if not isinstance(block, Block):
             raise TypeError("block should be an instance of Block.")
+        block._add_port(port=self)
         self.__block = block
     
     @property
@@ -46,31 +84,35 @@ class InPort(Port):
         Constructor.
         '''
         Port.__init__(self, block)
-        self.__data = deque()
-
-    def write(self, data):
+        self.__data = None
+        
+    async def _setup(self):
+        '''
+        '''
+        self.__data = Queue(maxsize=1)
+        
+    async def write(self, data):
         '''
         Writes data into the inport and 
         initiates the behavior of the block associated
         with the inport.
         '''        
-        self.__data.append(data)
-        self._block._behavior()
+        await self.__data.put(data)
     
     def ready(self):
         '''
         Returns whether or not new data has been written to
         the inport.
         '''
-        return len(self.__data)!=0
+        return not self.__data.empty()
 
     def read(self):
         '''
         Returns data written to the inport. If no data exists, None is
         returned.
         '''  
-        try: return self.__data.popleft()  
-        except IndexError: return None
+        try: return self.__data.get_nowait()  
+        except QueueEmpty: return None
 
 class OutPort(Port):
     '''
@@ -83,6 +125,14 @@ class OutPort(Port):
         '''
         Port.__init__(self, block)
         self.__inports = []
+        self.__written = False
+        
+    def _check(self):
+        '''
+        '''
+        retvalue = self.__written
+        self.__written = False
+        return retvalue
 
     def connect(self, inport):
         '''
@@ -115,13 +165,14 @@ class OutPort(Port):
 
         return inport._block            
 
-    def write(self, data):
+    async def write(self, data):
         '''
         Writes data to all the inports connected to
         the this outport.
         '''
+        self.__written = True
         for idx, inp in enumerate(self.__inports):            
-            inp.write(data)
+            await inp.write(data)
         
 
 

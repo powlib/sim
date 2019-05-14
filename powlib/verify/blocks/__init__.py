@@ -1,8 +1,10 @@
 from cocotb.log                      import SimLog
 from cocotb.result                   import TestFailure, TestSuccess
-from powlib.verify.block             import Block, InPort, OutPort
+from powlib.verify.block             import main, Block, InPort, OutPort
 from powlib.verify.agents.BusAgent   import OP_WRITE, OP_READ
 from powlib                          import Transaction
+
+from asyncio                         import run
 
 # Condition functions intended to be used with SwissBlock
 AllCondFunc = lambda *rdys : all(rdys)
@@ -34,6 +36,7 @@ class ComposedBlock(Block):
     and the outport of the last block, if the ports exist.
     '''
     def __init__(self, *blocks):
+        Block.__init__(self)
         ComposeBlocks(*blocks)
         self.__inport  = blocks[0].inport   if hasattr(blocks[0], "inport")   else None
         self.__outport = blocks[-1].outport if hasattr(blocks[-1],"outport")  else None
@@ -41,7 +44,7 @@ class ComposedBlock(Block):
     inport  = property(lambda self : self.__inport)
     outport = property(lambda self : self.__outport)                      
 
-    def _behavior(self): raise NotImplementedError("Composed blocks don't implement their own behavior.")        
+    async def _behavior(self): raise NotImplementedError("Composed blocks don't implement their own behavior.")        
 
 class SourceBlock(Block):
     '''
@@ -53,13 +56,17 @@ class SourceBlock(Block):
         '''
         Constructor.
         '''
+        Block.__init__(self)
         self.__outport    = OutPort(block=self)
 
     def write(self, data):
         '''
         Writes data into the outport.
         '''
-        self.__outport.write(data)
+        async def _coroutine():
+            await self.__outport.write(data)
+            await main()
+        run(_coroutine())        
 
     @property
     def outport(self):
@@ -68,7 +75,7 @@ class SourceBlock(Block):
         '''        
         return self.__outport
 
-    def _behavior(self):
+    async def _behavior(self):
         '''
         Implements the behavior of the block.
         '''        
@@ -89,6 +96,7 @@ class SwissBlock(Block):
         of the inports. It should return another boolean, where True causes the
         trans_func to be called.
         '''
+        Block.__init__(self)
         self.__inports    = [InPort(block=self) for _ in range(inputs)]
         self.__outport    = OutPort(block=self)
         self.__trans_func = trans_func
@@ -114,7 +122,7 @@ class SwissBlock(Block):
         '''
         return self.__inports[idx]
 
-    def _behavior(self):
+    async def _behavior(self):
         '''
         Implements the behavior of the block.
         '''
@@ -124,7 +132,7 @@ class SwissBlock(Block):
         if cond:
             data = [inp.read() for inp in self.__inports]
             ret  = self.__trans_func(*data)
-            if ret is not None: self.__outport.write(data=ret)                      
+            if ret is not None: await self.__outport.write(data=ret)                      
 
 class ScoreBlock(SwissBlock):
     '''
@@ -289,6 +297,7 @@ class BusRamConvertBlock(Block):
         '''
         Constructor. bpd is the number of bytes in a data word.
         '''
+        Block.__init__(self)
         self.__bpd        = bpd
         self.__busInport  = InPort(block=self)
         self.__busOutport = OutPort(block=self)
@@ -300,7 +309,7 @@ class BusRamConvertBlock(Block):
     ramInport  = property(lambda self : self.__ramInport)
     ramOutport = property(lambda self : self.__ramOutport)
     
-    def _behavior(self):
+    async def _behavior(self):
         '''
         Implements the behavior of the converter block.
         '''

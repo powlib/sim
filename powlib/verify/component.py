@@ -16,6 +16,7 @@ class Component(Block):
         Constructor that associates the interface
         with the component.
         '''
+        Block.__init__(self)
         if not isinstance(interface, Interface):
             raise TypeError("interface should be an Interface.")
         self.__interface = interface
@@ -71,7 +72,7 @@ class Driver(Component):
             yield self.__flushevt.wait()
         yield NullTrigger()                    
 
-    def _behavior(self):
+    async def _behavior(self):
         '''
         Implements the behavior of the block.
         '''
@@ -95,7 +96,7 @@ class Driver(Component):
 
     def _read(self):
         '''
-        Reads data from the driver's queue. Returns the data is 
+        Reads data from the driver's queue. Returns the data if 
         data is available. This method is also responsible for 
         waking up the coroutine on which a flush might be yielding.
         '''
@@ -141,7 +142,7 @@ class Monitor(Component):
         '''
         return self.__outport
 
-    def _behavior(self):
+    async def _behavior(self):
         '''
         Must be implemented since a Monitor is still a block.
         '''

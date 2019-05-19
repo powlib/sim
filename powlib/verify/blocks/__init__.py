@@ -57,9 +57,9 @@ class SourceBlock(Block):
 
     def write(self, data):
         '''
-        Writes data into the outport.
+        Writes data into the outport and executes the behavior.
         '''
-        self.__outport.write(data)
+        self.__outport.write(data, execute_behavior=True)
 
     @property
     def outport(self):
@@ -314,7 +314,8 @@ class BusRamConvertBlock(Block):
                                                        be=int(trans.be)))
             elif op==OP_READ:
                 self.ramOutport.write(data=Transaction(addr=int(trans.addr),
-                                                       be=int(trans.be)))
+                                                       be=int(trans.be)),
+                                      execute_behavior=True)
                 assert(self.ramInport.ready())
                 data = self.ramInport.read()
                 self.busOutport.write(data=Transaction(addr=int(trans.data),

@@ -176,7 +176,7 @@ class RegisterMonitor(Monitor):
         Samples from the interface and writes it out 
         on to the outport.
         '''        
-        self.outport.write(self._interface.read())    
+        self.outport.write(self._interface.read(), execute_behavior=True)    
         yield NullTrigger()
 
     @coroutine

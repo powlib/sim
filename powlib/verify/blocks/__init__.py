@@ -1,8 +1,8 @@
-from cocotb.log                      import SimLog
-from cocotb.result                   import TestFailure, TestSuccess
 from powlib.verify.block             import Block, InPort, OutPort
 from powlib.verify.agents.BusAgent   import OP_WRITE, OP_READ
 from powlib                          import Transaction
+
+from inspect                         import isclass
 
 # Condition functions intended to be used with SwissBlock
 AllCondFunc = lambda *rdys : all(rdys)
@@ -131,12 +131,30 @@ class ScoreBlock(SwissBlock):
     Used for scoring a set of values.
     '''
 
-    def __init__(self, inputs=2, name="", log_score=True):
+    def __init__(self, inputs=2, name="", logger=None, log_score=True):
         '''
         Constructor.
+        
+        inputs:
+            Specifies the number of inputs.
+            
+        name:
+            String identifier for the block.
+            
+        logger:
+            Reference to a specified logger. If set to None and log_score is True,
+            the cocotb logger will be utilized.
+            
+        log_score:
+            Enables logging if set to True.
         '''
         SwissBlock.__init__(self, trans_func=self._score_func, inputs=inputs)
-        self.__log       = SimLog("cocotb.score.{}".format(name))
+        if log_score:
+            if logger is None:
+                from cocotb.log import SimLog        
+                self.__log = SimLog("cocotb.score.{}".format(name))
+            else:
+                self.__log = logger
         self.__log_score = log_score
 
     def _score_func(self, *values):
@@ -168,37 +186,62 @@ class AssertBlock(SwissBlock):
     Simply throws TestFailure if a False
     is received.
     '''        
-    def __init__(self, inputs=1):
+    def __init__(self, inputs=1, Class=None):
         '''
         Assigns the transfer function the 
         failure method.
+        
+        inputs:
+            Number of inputs that can be asserted on.
+            
+        Class:
+            Class that will be thrown on a failed assertion. If set to None, the cocotb
+            TestFailure is utilized.
         '''
         SwissBlock.__init__(self, trans_func=self._failure_func, inputs=inputs)
+        if Class is None:
+            from cocotb.result import TestFailure
+            self.__Class = TestFailure
+        else:
+            if not isclass(Class):
+                raise TypeError("Class must be a class.")
+            self.__Class = Class 
 
     def _failure_func(self, *states):
         '''
         If the state is False, a TestFailure()
         is raised.
         '''
-        if any(state==False for state in states): raise TestFailure()
+        if any(state==False for state in states): raise self.__Class()
 
 class SucceedBlock(SwissBlock):
     '''
     Simply throws TestSuccess if a True is received.
     '''     
-    def __init__(self):
+    def __init__(self, Class=None):
         '''
         Assigns the transfer function the 
         succeed method.
+        
+        Class:
+            Class that will be thrown on a success. If set to None, the cocotb
+            TestSuccess is utilized.        
         '''
         SwissBlock.__init__(self, self._success_func)
+        if Class is None:
+            from cocotb.result import TestSuccess
+            self.__Class = TestSuccess
+        else:
+            if not isclass(Class):
+                raise TypeError("Class must be a class.")
+            self.__Class = Class         
 
     def _success_func(self, state):
         '''
         If the state is False, a TestFailure()
         is raised.
         '''
-        if state==True: raise TestSuccess()
+        if state==True: raise self.__Class()
 
 class CountBlock(SwissBlock):
     '''
@@ -220,9 +263,13 @@ class PrintBlock(SwissBlock):
     Simply prints out the data it
     receives.
     '''
-    def __init__(self, name="data"):
+    def __init__(self, name="data", logger=None):
         SwissBlock.__init__(self, trans_func=self._print_func)
-        self.__log       = SimLog("cocotb.print.{}".format(name))
+        if logger is None:
+            from cocotb.log import SimLog
+            self.__log = SimLog("cocotb.print.{}".format(name))
+        else:
+            self.__log = logger
 
     def _print_func(self, data):
         self.__log.info("{}".format(data))  

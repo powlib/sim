@@ -32,7 +32,7 @@ class Port(object):
 
     def __init__(self, block, bqueue=default_bqueue):
         '''
-        Associates the port with a single block.
+        Associates the port with a single block and a behavior queue.
         '''
         
         # Store the block associated with the Port.
@@ -144,7 +144,8 @@ class OutPort(Port):
     def write(self, data, execute_behavior=False):
         '''
         Writes data to all the inports connected to
-        the this outport. If execute_behavior is set, the 
+        the this outport. If execute_behavior is set, the queued behaviors are
+        executed.
         '''
         # Write data to all InPorts associated with the OutPort.
         for idx, inp in enumerate(self.__inports):            

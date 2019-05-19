@@ -1,4 +1,3 @@
-from cocotb.handle import SimHandleBase
 
 class Namespace(object):
     '''
@@ -76,6 +75,10 @@ class Interface(Namespace):
         This constructor is needed to ensure the interface
         is created with only cocotb handles.
         '''
+        # The Simulation Handle is imported within the Interface so that
+        # the user isn't required to have cocotb if they want to utilize any other
+        # Namespace class.
+        from cocotb.handle import SimHandleBase
         
         # Check and make sure all the members are cocotb handles.
         if not all (isinstance(handle, SimHandleBase) for name, handle in kwargs.items()):

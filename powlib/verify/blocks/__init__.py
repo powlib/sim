@@ -12,21 +12,34 @@ AnyCondFunc = lambda *rdys : any(rdys)
 BYTE_WIDTH = 8
 BYTE_MASK  = (1<<BYTE_WIDTH)-1
 
-def ComposeBlocks(*blocks):
+def ComposeBlocks(*objs):
     '''
     A utility function used for quickly connecting blocks that define
     inport and outport attributes. The first block only needs an outport,
     whereas the last block only needs an inport. Every block in between
     needs both.
     '''
-    previous_block = None
-    for block in blocks:
-        if not isinstance(block,Block):
-            raise TypeError("Only blocks can be composed.")        
-        if previous_block is not None:
-            previous_block.outport.connect(block.inport)
-        previous_block = block                  
-
+    
+    previous_outport = None
+    objs_end         = len(objs)-1
+    for index, port_or_block in enumerate(objs):
+        if isinstance(port_or_block, Block):
+            block = port_or_block
+            if previous_outport is not None:
+                previous_outport.connect(block.inport)
+            if index!=objs_end:
+                previous_outport = block.outport               
+        elif index==0 and isinstance(port_or_block, OutPort):
+            previous_outport = port_or_block
+        elif index==objs_end and isinstance(port_or_block, InPort):
+            inport = port_or_block
+            previous_outport.connect(inport)
+        else: 
+            raise TypeError("Only blocks can be composed, with the only " + 
+                            "exceptions being the first block can instead be " + 
+                            "an OutPort and the last block can instead be an " +
+                            "InPort.")        
+                
 class ComposedBlock(Block):
     '''
     A class wrapper for composing blocks. Works the same as ComposeBlocks,
